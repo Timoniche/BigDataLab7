@@ -38,6 +38,8 @@ public class HdfsClient {
         }
     }
 
+    //todo: write to hdfs api
+
     public static void main(String[] args) {
         String hdfsFilePath = "/user/ddulaev/dataset.csv";
         String rootPath = Paths.get(".").toAbsolutePath().normalize().toString();
