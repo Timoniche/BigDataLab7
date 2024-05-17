@@ -63,19 +63,11 @@ public class HdfsClient {
         }
     }
 
-    public static void main(String[] args) {
-        String rootPath = Paths.get(".").toAbsolutePath().normalize().toString();
-        String localFilePath = rootPath + "/src/dataset.csv";
-        String hdfsFilePath = "/user/ddulaev/TMP.csv";
+   public static void main(String[] args) {
+       String hdfsFilePath = "/user/ddulaev/dataset.csv";
+       String rootPath = Paths.get(".").toAbsolutePath().normalize().toString();
+       String localDownloadPath = rootPath + "/src/dataset.csv";
 
-        new HdfsClient().upload(localFilePath, hdfsFilePath);
-    }
-
-//    public static void main(String[] args) {
-//        String hdfsFilePath = "/user/ddulaev/dataset.csv";
-//        String rootPath = Paths.get(".").toAbsolutePath().normalize().toString();
-//        String localDownloadPath = rootPath + "/src/dataset.csv";
-//
-//        new HdfsClient().download(hdfsFilePath, localDownloadPath);
-//    }
+       new HdfsClient().download(hdfsFilePath, localDownloadPath);
+   }
 }

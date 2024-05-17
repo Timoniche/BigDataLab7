@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 
 from datamart import DataMart
+from hdfs_client import HdfsClient
 from kmeans_clustering import KMeansClustering
 from spark_session_provider import SparkSessionProvider
+from utils import root_dir
 
 
 def plot_silhouette_scores(scores, k_search_range):
@@ -14,6 +16,11 @@ def plot_silhouette_scores(scores, k_search_range):
 
 
 def main():
+    HdfsClient().upload_file(
+        hdfs_path='dataset.csv',
+        local_path=root_dir() + '/dataset.csv',
+        overwrite=True,
+    )
     spark = SparkSessionProvider().provide_session()
     clusterizer = KMeansClustering()
     datamart = DataMart(spark)
