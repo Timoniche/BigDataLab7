@@ -38,13 +38,44 @@ public class HdfsClient {
         }
     }
 
-    //todo: write to hdfs api
+    public void upload(
+            String localFilePath,
+            String hdfsDownloadPath
+    ) {
+        try {
+            URI uri = new URI(hdfsBaseUrl + hdfsDownloadPath + "?op=CREATE");
+            HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("PUT");
+
+            try (OutputStream os = connection.getOutputStream(); FileInputStream fis = new FileInputStream(localFilePath)) {
+                fis.transferTo(os);
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                System.out.println("File uploaded successfully to HDFS.");
+            } else {
+                System.out.println("Failed to upload file to HDFS (HTTP Status: " + responseCode + ")");
+            }
+        } catch (IOException | URISyntaxException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
 
     public static void main(String[] args) {
-        String hdfsFilePath = "/user/ddulaev/dataset.csv";
         String rootPath = Paths.get(".").toAbsolutePath().normalize().toString();
-        String localDownloadPath = rootPath + "/src/dataset.csv";
+        String localFilePath = rootPath + "/src/dataset.csv";
+        String hdfsFilePath = "/user/ddulaev/TMP.csv";
 
-        new HdfsClient().download(hdfsFilePath, localDownloadPath);
+        new HdfsClient().upload(localFilePath, hdfsFilePath);
     }
+
+//    public static void main(String[] args) {
+//        String hdfsFilePath = "/user/ddulaev/dataset.csv";
+//        String rootPath = Paths.get(".").toAbsolutePath().normalize().toString();
+//        String localDownloadPath = rootPath + "/src/dataset.csv";
+//
+//        new HdfsClient().download(hdfsFilePath, localDownloadPath);
+//    }
 }

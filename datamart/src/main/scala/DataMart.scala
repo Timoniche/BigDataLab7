@@ -1,7 +1,5 @@
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import preprocess.Preprocessor
-import hdfs.HdfsClient
-
 
 object DataMart {
   private val APP_NAME = "KMeans"
@@ -10,7 +8,6 @@ object DataMart {
   private val EXECUTOR_MEMORY = "2g"
   private val EXECUTOR_CORES = 1
   private val DRIVER_CORES = 1
-  private val MYSQL_CONNECTOR_JAR = "/Users/timoniche/Documents/BigData/BigDataLab7/datamart/jars/mysql-connector-j-8.4.0.jar"
   private val spark = SparkSession.builder
     .appName(APP_NAME)
     .master(DEPLOY_MODE)
@@ -18,8 +15,6 @@ object DataMart {
     .config("spark.executor.cores", EXECUTOR_CORES)
     .config("spark.driver.memory", DRIVER_MEMORY)
     .config("spark.executor.memory", EXECUTOR_MEMORY)
-    .config("spark.jars", MYSQL_CONNECTOR_JAR)
-    .config("spark.driver.extraClassPath", MYSQL_CONNECTOR_JAR)
     .getOrCreate()
 
   def readPreprocessedOpenFoodFactsDataset(): DataFrame = {
