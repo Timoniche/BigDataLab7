@@ -7,3 +7,7 @@
 /unit_tests/tmp.csv
 /logfile.log
 /silhouette.png
+/datamart/target/
+/datamart/.idea/
+/datamart/project/target/
+/datamart/.bsp/sbt.json
