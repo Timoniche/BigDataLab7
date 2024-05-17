@@ -10,16 +10,17 @@ object Preprocessor {
 
   def assembleVector(df: DataFrame): DataFrame = {
     val outputCol = "features"
-//    val inputCols = "energy-kcal_100g" ::
-//      "sugars_100g" ::
-//      "energy_100g" ::
-//      "fat_100g" ::
-//      "saturated-fat_100g" ::
-//      "carbohydrates_100g" ::
-//      Nil
+    val inputCols: Array[String] = Array(
+      "energy-kcal_100g",
+      "sugars_100g",
+      "energy_100g",
+      "fat_100g",
+      "saturated-fat_100g",
+      "carbohydrates_100g"
+    )
 
     val vector_assembler = new VectorAssembler()
-      .setInputCols(df.columns)
+      .setInputCols(inputCols)
       .setOutputCol(outputCol)
       .setHandleInvalid("skip")
     vector_assembler.transform(df)

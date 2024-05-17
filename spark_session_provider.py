@@ -16,7 +16,11 @@ class SparkSessionProvider:
             .config("spark.executor.memory", self.config['spark']['executor.memory']) \
             .config("spark.driver.cores", self.config['spark']['driver.cores']) \
             .config("spark.executor.cores", self.config['spark']['executor.cores']) \
+            .config("spark.jars", f"/Users/timoniche/Documents/BigData/BigDataLab7/datamart/jars/mysql-connector-j-8.4.0.jar,/Users/timoniche/Documents/BigData/BigDataLab7/datamart/jars/datamart.jar") \
+            .config("spark.driver.extraClassPath", '/Users/timoniche/Documents/BigData/BigDataLab7/datamart/jars/mysql-connector-j-8.4.0.jar') \
             .getOrCreate()
+        # .config("spark.jars", "/Users/timoniche/Documents/BigData/BigDataLab7/datamart/jars/datamart.jar") \
+        # .config("spark.jars", f"datamart/jars/datamart.jar") \
 
     def provide_session(self) -> SparkSession:
         return self.spark_session
