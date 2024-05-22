@@ -26,6 +26,7 @@ def main():
     datamart = DataMart(spark)
 
     scaled_dataset = datamart.read_dataset()
+    scaled_dataset.collect()
 
     scores = clusterizer.clusterize(scaled_dataset)
     plot_silhouette_scores(scores, clusterizer.k_search_range)

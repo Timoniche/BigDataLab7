@@ -25,7 +25,7 @@ class KMeansClustering:
             distanceMeasure=self.config['clusterizer']['distanceMeasure'],
         )
 
-        self.k_search_range = range(2, 7)
+        self.k_search_range = range(3, 4)
 
     def clusterize(
             self,
