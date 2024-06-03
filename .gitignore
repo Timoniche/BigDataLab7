@@ -11,3 +11,6 @@
 /datamart/.idea/
 /datamart/project/target/
 /datamart/.bsp/sbt.json
+/datamart/project/project/target/config-classes/*
+src/main/.DS_Store
+.DS_Store

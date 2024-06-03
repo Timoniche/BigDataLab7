@@ -9,6 +9,7 @@ class SparkSessionProvider:
         self.config = configparser.ConfigParser()
         curdir = str(pathlib.Path(__file__).parent)
         self.config.read(curdir + '/config.ini')
+        logging_jar_path = self.config['spark']['logging.jar']
         self.spark_session = SparkSession.builder \
             .master(self.config['spark']['master']) \
             .appName(self.config['spark']['appName']) \
@@ -16,7 +17,7 @@ class SparkSessionProvider:
             .config("spark.executor.memory", self.config['spark']['executor.memory']) \
             .config("spark.driver.cores", self.config['spark']['driver.cores']) \
             .config("spark.executor.cores", self.config['spark']['executor.cores']) \
-            .config("spark.jars", f"datamart/jars/datamart.jar") \
+            .config("spark.jars", f"datamart/jars/datamart.jar,{logging_jar_path}") \
             .config("spark.driver.host", "127.0.0.1") \
             .config("spark.driver.bindAddress", "127.0.0.1") \
             .getOrCreate()
