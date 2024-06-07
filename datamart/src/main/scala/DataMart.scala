@@ -2,6 +2,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import preprocess.Preprocessor
 import com.typesafe.scalalogging.Logger
 
+
 object DataMart {
   private val APP_NAME = "KMeans"
   private val DEPLOY_MODE = "local"
@@ -22,15 +23,26 @@ object DataMart {
     .getOrCreate()
 
   private val logger = Logger("Logger")
-//  private val curDir = System.getProperty("user.dir")
+  //  private val curDir = System.getProperty("user.dir")
+  //todo: make through resources folder?
   private val curDir = "/Users/timoniche/Documents/BigData/BigDataLab7/datamart/src/main/scala"
 
   logger.info("Curdir is {}", curDir)
 
-  private val hdfsClient = new HdfsClient
-  private val hdfsFilePath = "/user/ddulaev/dataset.csv"
+  private val user = "ddulaev"
+  private val downloadOrigin = "http://" + HOST + ":" + "9870"
+  private val uploadOrigin = "http://datanode:9864"
+  private val namenodeRpcAddress = "namenode:9000"
+  private val hdfsClient = new HdfsClient(
+    user,
+    downloadOrigin,
+    uploadOrigin,
+    namenodeRpcAddress,
+  )
+  private val hdfsFilePath = "dataset.csv"
   private val localDownloadPath = curDir + "/dataset.csv"
-  private val scaledLocalLoadPath = curDir + "/scaled_dataset.csv"
+  private val predictionsLocalPath = curDir + "/predictions.csv"
+  private val hdfsPredictionsUploadPath = "predictions.csv"
 
   def readPreprocessedOpenFoodFactsDataset(): DataFrame = {
     logger.info("Loading dataset.csv from hdfs, hdfsFilePath {}, localPath {}", hdfsFilePath, localDownloadPath)
@@ -65,21 +77,15 @@ object DataMart {
       .option("header", "true")
       //      .option("sep", ",") \t?
       .mode("overwrite")
-      .csv(scaledLocalLoadPath)
+      .csv(predictionsLocalPath)
+
+    hdfsClient.upload(predictionsLocalPath, hdfsPredictionsUploadPath)
   }
 }
 
 object Main {
   def main(args: Array[String]): Unit = {
     val df = DataMart.readPreprocessedOpenFoodFactsDataset()
-//    val curDir = System.getProperty("user.dir")
-//    val logger = Logger("Logger")
-//    val hdfsClient = new HdfsClient
-//    val hdfsFilePath = "/user/ddulaev/dataset.csv"
-//    val localDownloadPath = curDir + "/src/dataset.csv"
-//
-//    logger.info("Loading dataset.csv from hdfs, hdfsFilePath {}, localPath {}", hdfsFilePath, localDownloadPath)
-//    logger.info("Curdir: {}", curDir)
-
   }
+
 }

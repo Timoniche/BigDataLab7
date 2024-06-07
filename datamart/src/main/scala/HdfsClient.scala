@@ -3,15 +3,27 @@ import com.typesafe.scalalogging.Logger
 import java.io._
 import java.net.{HttpURLConnection, URI, URISyntaxException}
 
-class HdfsClient {
+class HdfsClient(
+                  private val user: String,
+                  private val downloadOrigin: String,
+                  private val uploadOrigin: String,
+                  private val namenodeRpcAddress: String,
+                ) {
 
-  private val hdfsBaseUrl = "http://127.0.0.1:9870/webhdfs/v1"
-  private val log = Logger("Logger")
+  private val hdfsBaseDownloadUrl = downloadOrigin + "/webhdfs/v1/user/"
+  private val hdfsBaseUploadUrl = uploadOrigin + "/webhdfs/v1/"
+  private val log = Logger("HdfsClient")
 
 
   def download(hdfsFilePath: String, localDownloadPath: String): Unit = {
     try {
-      val uri = new URI(hdfsBaseUrl + hdfsFilePath + "?op=OPEN")
+      val uri = new URI(
+        "" +
+          hdfsBaseDownloadUrl +
+          user + "/" +
+          hdfsFilePath +
+          "?op=OPEN"
+      )
       val connection = uri.toURL.openConnection.asInstanceOf[HttpURLConnection]
       connection.setRequestMethod("GET")
 
@@ -30,9 +42,17 @@ class HdfsClient {
     }
   }
 
-  def upload(localFilePath: String, hdfsDownloadPath: String): Unit = {
+  def upload(localFilePath: String, hdfsUploadPath: String): Unit = {
     try {
-      val uri = new URI(hdfsBaseUrl + hdfsDownloadPath + "?op=CREATE")
+      val uri = new URI(
+        "" +
+          hdfsBaseUploadUrl +
+          user + "/" +
+          hdfsUploadPath +
+          "?op=CREATE&user.name=" + user +
+          "&namenoderpcaddress=" + namenodeRpcAddress +
+          "&createflag=&createparent=true&overwrite=true"
+      )
       val connection = uri.toURL.openConnection.asInstanceOf[HttpURLConnection]
       connection.setDoOutput(true)
       connection.setRequestMethod("PUT")
@@ -53,14 +73,3 @@ class HdfsClient {
   }
 
 }
-
-//object Main {
-//  def main(args: Array[String]): Unit = {
-//    val curDir = "/Users/timoniche/Documents/BigData/BigDataLab7/datamart/src/main/scala"
-//
-//    val hdfsFilePath = "/user/ddulaev/dataset.csv"
-//    val localDownloadPath = curDir + "/dataset.csv"
-//
-//    new HdfsClient().download(hdfsFilePath, localDownloadPath)
-//  }
-//}
