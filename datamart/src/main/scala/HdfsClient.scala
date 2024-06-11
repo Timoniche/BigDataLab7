@@ -2,6 +2,7 @@ import com.typesafe.scalalogging.Logger
 
 import java.io._
 import java.net.{HttpURLConnection, URI, URISyntaxException}
+import scala.util.Using
 
 class HdfsClient(
                   private val user: String,
@@ -27,9 +28,11 @@ class HdfsClient(
       val connection = uri.toURL.openConnection.asInstanceOf[HttpURLConnection]
       connection.setRequestMethod("GET")
 
-      val is = connection.getInputStream
-      val fos = new FileOutputStream(localDownloadPath)
-      is.transferTo(fos)
+      Using(connection.getInputStream) { is =>
+        Using(new FileOutputStream(localDownloadPath)) { fos =>
+          is.transferTo(fos)
+        }
+      }
 
       val responseCode = connection.getResponseCode
       if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -57,9 +60,11 @@ class HdfsClient(
       connection.setDoOutput(true)
       connection.setRequestMethod("PUT")
 
-      val os = connection.getOutputStream
-      val fis = new FileInputStream(localFilePath)
-      fis.transferTo(os)
+      Using(connection.getOutputStream) { os =>
+        Using(new FileInputStream(localFilePath)) { fis =>
+          fis.transferTo(os)
+        }
+      }
 
       val responseCode = connection.getResponseCode
       if (responseCode == HttpURLConnection.HTTP_CREATED) {

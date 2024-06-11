@@ -23,9 +23,7 @@ object DataMart {
     .getOrCreate()
 
   private val logger = Logger("Logger")
-  //  private val curDir = System.getProperty("user.dir")
-  //todo: make through resources folder?
-  private val curDir = "/Users/timoniche/Documents/BigData/BigDataLab7/datamart/src/main/scala"
+  private val curDir = System.getProperty("user.dir")
 
   logger.info("Curdir is {}", curDir)
 
@@ -40,8 +38,8 @@ object DataMart {
     namenodeRpcAddress,
   )
   private val hdfsFilePath = "dataset.csv"
-  private val localDownloadPath = curDir + "/dataset.csv"
-  private val predictionsLocalPath = curDir + "/predictions.csv"
+  private val localDownloadPath = curDir + "/market_dataset.csv"
+  private val predictionsLocalPath = curDir + "/market_predictions.csv"
   private val hdfsPredictionsUploadPath = "predictions.csv"
 
   def readPreprocessedOpenFoodFactsDataset(): DataFrame = {
