@@ -25,20 +25,20 @@ class KMeansClustering:
             distanceMeasure=self.config['clusterizer']['distanceMeasure'],
         )
 
-        self.k_search_range = range(3, 4)
+        self.k = 3
 
     def clusterize(
             self,
             dataset: DataFrame,
     ):
         silhouette_scores = []
-        for k in self.k_search_range:
-            kmeans = KMeans(featuresCol=self.features_column, k=k)
-            model = kmeans.fit(dataset)
-            predictions = model.transform(dataset)
-            score = self.evaluator.evaluate(predictions)
 
-            silhouette_scores.append(score)
-            self.log.info(f'Silhouette Score for k = {k} is {score}')
+        kmeans = KMeans(featuresCol=self.features_column, k=self.k)
+        model = kmeans.fit(dataset)
+        predictions = model.transform(dataset)
+        score = self.evaluator.evaluate(predictions)
 
-        return silhouette_scores
+        silhouette_scores.append(score)
+        self.log.info(f'Silhouette Score for k = {self.k} is {score}')
+
+        return predictions

@@ -1,20 +1,9 @@
-import matplotlib.pyplot as plt
-from pyspark.sql.types import StructType, StructField, IntegerType, FloatType
-
 from datamart import DataMart
 from hdfs_client import HdfsClient
 from kmeans_clustering import KMeansClustering
 from logger import Logger
 from spark_session_provider import SparkSessionProvider
 from utils import root_dir
-
-
-def plot_silhouette_scores(scores, k_search_range):
-    plt.plot(k_search_range, scores)
-    plt.xlabel('k')
-    plt.ylabel('silhouette score')
-    plt.title('Silhouette Score')
-    plt.show()
 
 
 def main():
@@ -35,17 +24,8 @@ def main():
     scaled_dataset = datamart.read_dataset()
     scaled_dataset.collect()
 
-    scores = clusterizer.clusterize(scaled_dataset)
-    plot_silhouette_scores(scores, clusterizer.k_search_range)
-
-    predictions = list(zip(list(clusterizer.k_search_range), scores))
-    predictions_schema = StructType([
-        StructField('k', IntegerType()),
-        StructField('Silhouette', FloatType()),
-    ])
-    predictions_df = spark.createDataFrame(predictions, schema=predictions_schema)
-
-    datamart.write_predictions(predictions_df)
+    predictions = clusterizer.clusterize(scaled_dataset)
+    datamart.write_predictions(predictions.select("prediction"))
 
     spark.stop()
 

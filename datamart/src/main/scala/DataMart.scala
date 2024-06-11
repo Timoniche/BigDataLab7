@@ -85,6 +85,7 @@ object DataMart {
     df
       .coalesce(1)
       .write
+      .format("overwrite")
       .option("sep", "\t")
       .option("header", "true")
       .csv(tmpDir)
