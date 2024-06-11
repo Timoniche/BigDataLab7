@@ -2,7 +2,10 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import preprocess.Preprocessor
 import com.typesafe.scalalogging.Logger
 
+import java.io.File
 
+
+//noinspection ScalaUnusedSymbol
 object DataMart {
   private val APP_NAME = "KMeans"
   private val DEPLOY_MODE = "local"
@@ -25,9 +28,8 @@ object DataMart {
   private val logger = Logger("Logger")
   private val curDir = System.getProperty("user.dir")
 
-  logger.info("Curdir is {}", curDir)
-
   private val user = "ddulaev"
+  //noinspection HttpUrlsUsage
   private val downloadOrigin = "http://" + HOST + ":" + "9870"
   private val uploadOrigin = "http://datanode:9864"
   private val namenodeRpcAddress = "namenode:9000"
@@ -70,20 +72,29 @@ object DataMart {
   }
 
   def writePredictions(df: DataFrame): Unit = {
-    df.coalesce(1)
-      .write
-      .option("header", "true")
-      //      .option("sep", ",") \t?
-      .mode("overwrite")
-      .csv(predictionsLocalPath)
+    logger.info("CSV Path is {}", predictionsLocalPath)
+    saveDfToCsv(df, predictionsLocalPath)
 
+    logger.info("Dataframe is saved, uploading it to HDFS")
     hdfsClient.upload(predictionsLocalPath, hdfsPredictionsUploadPath)
   }
-}
 
-object Main {
-  def main(args: Array[String]): Unit = {
-    val df = DataMart.readPreprocessedOpenFoodFactsDataset()
+  private def saveDfToCsv(df: DataFrame, csvPath: String): Unit = {
+    val tmpDir = curDir + "/TMP_DIR"
+
+    df
+      .coalesce(1)
+      .write
+      .option("sep", "\t")
+      .option("header", "true")
+      .csv(tmpDir)
+
+    val dir = new File(tmpDir)
+    val newFileRgex = tmpDir + File.separatorChar + "part-00000.*.csv"
+    val tmpTsvFile = dir.listFiles.filter(_.toPath.toString.matches(newFileRgex))(0).toString
+    new File(tmpTsvFile).renameTo(new File(csvPath))
+
+    dir.listFiles.foreach(f => f.delete)
+    dir.delete
   }
-
 }

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from pyspark.sql.types import StructType, StructField, IntegerType, FloatType
 
 from datamart import DataMart
 from hdfs_client import HdfsClient
@@ -36,6 +37,15 @@ def main():
 
     scores = clusterizer.clusterize(scaled_dataset)
     plot_silhouette_scores(scores, clusterizer.k_search_range)
+
+    predictions = list(zip(list(clusterizer.k_search_range), scores))
+    predictions_schema = StructType([
+        StructField('k', IntegerType()),
+        StructField('Silhouette', FloatType()),
+    ])
+    predictions_df = spark.createDataFrame(predictions, schema=predictions_schema)
+
+    datamart.write_predictions(predictions_df)
 
     spark.stop()
 
