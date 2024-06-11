@@ -1,9 +1,23 @@
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import preprocess.Preprocessor
 import com.typesafe.scalalogging.Logger
+import org.apache.spark.sql.functions.{col, monotonically_increasing_id}
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File, IOException}
+import java.net.URISyntaxException
+import scala.util.Using
 
+final case class DownloadingDatasetException(
+                                              private val message: String = "",
+                                              private val cause: Throwable = None.orNull
+                                            )
+  extends Exception(message, cause)
+
+final case class UploadingPredictionsException(
+                                                private val message: String = "",
+                                                private val cause: Throwable = None.orNull
+                                              )
+  extends Exception(message, cause)
 
 //noinspection ScalaUnusedSymbol
 object DataMart {
@@ -42,21 +56,27 @@ object DataMart {
   private val hdfsFilePath = "dataset.csv"
   private val localDownloadPath = curDir + "/market_dataset.csv"
   private val predictionsLocalPath = curDir + "/market_predictions.csv"
+  private val oldPredictionsLocalPath = curDir + "/old_market_predictions.csv"
   private val hdfsPredictionsUploadPath = "predictions.csv"
+  private val predictionsLocalDiffPath = curDir + "/diff_market_predictions.csv"
 
   def readPreprocessedOpenFoodFactsDataset(): DataFrame = {
     logger.info("Loading dataset.csv from hdfs, hdfsFilePath {}, localPath {}", hdfsFilePath, localDownloadPath)
 
-    hdfsClient.download(hdfsFilePath, localDownloadPath)
+    try {
+      val downloaded = hdfsClient.download(hdfsFilePath, localDownloadPath)
+      if (!downloaded) {
+        throw DownloadingDatasetException("Failed to download file from HDFS")
+      }
+    } catch {
+      case ex@(_: IOException | _: URISyntaxException) =>
+        logger.info("download ex: {}", ex.getMessage)
+        throw DownloadingDatasetException(ex.getMessage)
+    }
 
     logger.info("Dataset is downloaded from hdfs to localPath {}", localDownloadPath)
 
-    val df = spark.read
-      .format("csv")
-      .option("header", "true")
-      .option("sep", "\t")
-      .option("inferSchema", "true")
-      .load(localDownloadPath)
+    val df = readDataFrameFromPath(localDownloadPath)
 
     val transforms: Seq[DataFrame => DataFrame] = Seq(
       Preprocessor.fillNa,
@@ -74,9 +94,38 @@ object DataMart {
   def writePredictions(df: DataFrame): Unit = {
     logger.info("CSV Path is {}", predictionsLocalPath)
     saveDfToCsv(df, predictionsLocalPath)
-
     logger.info("Dataframe is saved, uploading it to HDFS")
-    hdfsClient.upload(predictionsLocalPath, hdfsPredictionsUploadPath)
+
+    diffWithOldPredictions(df)
+
+    try {
+      val uploaded = hdfsClient.upload(predictionsLocalPath, hdfsPredictionsUploadPath)
+      if (!uploaded) {
+        throw UploadingPredictionsException("Failed to upload predictions to HDFS")
+      }
+    } catch {
+      case ex@(_: IOException | _: URISyntaxException) =>
+        logger.info("upload ex: {}", ex.getMessage)
+        throw UploadingPredictionsException(ex.getMessage)
+    }
+  }
+
+  private def diffWithOldPredictions(newDf: DataFrame): Unit = {
+    try {
+      logger.info("Extracting old predictions to show diff")
+      val downloadedOldPredictions = hdfsClient.download(hdfsPredictionsUploadPath, oldPredictionsLocalPath)
+      if (!downloadedOldPredictions) {
+        logDataFrame(newDf, "Predictions diff ")
+      } else {
+        val oldDf = readDataFrameFromPath(oldPredictionsLocalPath)
+        val diff = dataFramesDiff(oldDf, newDf)
+        logDataFrame(diff, "Predictions diff ")
+        saveDfToCsv(diff, predictionsLocalDiffPath)
+      }
+    } catch {
+      case ex@(_: IOException | _: URISyntaxException) =>
+        logDataFrame(newDf, "Predictions diff ")
+    }
   }
 
   private def saveDfToCsv(df: DataFrame, csvPath: String): Unit = {
@@ -91,11 +140,48 @@ object DataMart {
       .csv(tmpDir)
 
     val dir = new File(tmpDir)
-    val newFileRgex = tmpDir + File.separatorChar + "part-00000.*.csv"
-    val tmpTsvFile = dir.listFiles.filter(_.toPath.toString.matches(newFileRgex))(0).toString
-    new File(tmpTsvFile).renameTo(new File(csvPath))
+    val newFileRegex = tmpDir + File.separatorChar + "part-00000.*.csv"
+    val tmpCsvFile = dir.listFiles.filter(_.toPath.toString.matches(newFileRegex))(0).toString
+    new File(tmpCsvFile).renameTo(new File(csvPath))
 
     dir.listFiles.foreach(f => f.delete)
     dir.delete
+  }
+
+  def readDataFrameFromPath(localPath: String): DataFrame = spark.read
+    .format("csv")
+    .option("header", "true")
+    .option("sep", "\t")
+    .option("inferSchema", "true")
+    .load(localPath)
+
+  def logDataFrame(df: DataFrame, prefix: String = ""): Unit = Using(new ByteArrayOutputStream()) { dfOutputStream =>
+    Console.withOut(dfOutputStream) {
+      df.show()
+    }
+    val dfOutput = new String(dfOutputStream.toByteArray)
+    logger.info("{}{}", prefix, dfOutput)
+  }
+
+  def dataFramesDiff(dfOld: DataFrame, dfNew: DataFrame): DataFrame = {
+    val a = dfOld.withColumn("row_num", monotonically_increasing_id()).alias("a")
+    val b = dfNew.withColumn("row_num", monotonically_increasing_id()).alias("b")
+    val diff = a.join(b, Seq("row_num"), "outer")
+      .filter(col("a.prediction") =!= col("b.prediction") || col("a.prediction").isNull || col("b.prediction").isNull)
+      .select(col("row_num"), col("a.prediction").as("prediction_was"), col("b.prediction").as("prediction_now"))
+
+    diff
+  }
+}
+
+object Main {
+  def main(args: Array[String]): Unit = {
+    val marketPredictionsOld = getClass.getResource("market_predictions.csv").getPath
+    val marketPredictionsNew = getClass.getResource("market_predictions2.csv").getPath
+    val datamart = DataMart
+    val dfOld = datamart.readDataFrameFromPath(marketPredictionsOld)
+    val dfNew = datamart.readDataFrameFromPath(marketPredictionsNew)
+    val predictionsDiff = datamart.dataFramesDiff(dfOld, dfNew)
+    datamart.logDataFrame(predictionsDiff)
   }
 }
