@@ -173,15 +173,3 @@ object DataMart {
     diff
   }
 }
-
-object Main {
-  def main(args: Array[String]): Unit = {
-    val marketPredictionsOld = getClass.getResource("market_predictions.csv").getPath
-    val marketPredictionsNew = getClass.getResource("market_predictions2.csv").getPath
-    val datamart = DataMart
-    val dfOld = datamart.readDataFrameFromPath(marketPredictionsOld)
-    val dfNew = datamart.readDataFrameFromPath(marketPredictionsNew)
-    val predictionsDiff = datamart.dataFramesDiff(dfOld, dfNew)
-    datamart.logDataFrame(predictionsDiff)
-  }
-}
