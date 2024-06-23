@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
 
 val sparkVersion = "3.5.1"
 
-//noinspection SbtDependencyVersionInspection
+//noinspection SbtDependencyVersionInspection,VulnerableLibrariesLocal
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % sparkVersion,
   "org.apache.spark" %% "spark-sql" % sparkVersion,
@@ -17,4 +17,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.scalatest" %% "scalatest" % "3.2.15" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.8.5",
+  "com.typesafe.akka" %% "akka-stream" % "2.8.5",
+  "com.typesafe.akka" %% "akka-http-core" % "10.5.3",
+  "com.typesafe.akka" %% "akka-http" % "10.5.3",
 )
+
+fork := true
+javaOptions += "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
