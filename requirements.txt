@@ -1,6 +1,5 @@
 findspark~=2.0.1
 pyspark~=3.5.1
-matplotlib~=3.8.4
-pandas~=2.2.2
+pandas~=2.0.3
 hdfs~=2.7.3
 coverage~=7.5.1
