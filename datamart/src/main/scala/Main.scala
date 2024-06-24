@@ -8,6 +8,8 @@ object Main {
 
   private val datamart = DataMart
 
+  //  add to VM options
+  //  --add-exports java.base/sun.nio.ch=ALL-UNNAMED
   def main(args: Array[String]): Unit = {
     startHttpServer()
   }

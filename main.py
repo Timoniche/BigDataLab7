@@ -12,14 +12,15 @@ def main():
 
     localpath = root_dir() + '/dataset.csv'
     log.info(f'dataset localpath: {localpath}')
-    HdfsClient().upload_file(
+    hdfs_client = HdfsClient()
+    hdfs_client.upload_file(
         hdfs_path='dataset.csv',
         local_path=localpath,
         overwrite=True,
     )
     spark = SparkSessionProvider().provide_session()
     clusterizer = KMeansClustering()
-    datamart = DataMart(spark)
+    datamart = DataMart(spark, hdfs_client)
 
     scaled_dataset = datamart.read_dataset()
     scaled_dataset.collect()
