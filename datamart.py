@@ -27,14 +27,11 @@ class DataMart:
     def read_dataset(self) -> DataFrame:
         self.log.info('Reading dataset from DataMart')
         response = requests.get(self.datamart_url + '/preprocess')
-        self.log.info('Response code: ', response.status_code)
+        self.log.info(f'Datamart response code: {response.status_code}')
 
         return self.hdfs_client.read_csv(
             hdfs_csv_path='preprocessed.csv',
-            local_path=self.curdir / 'preprocessed.csv',
+            local_path=str(self.curdir / 'preprocessed.csv'),
             spark_session=self.spark_session,
-            overwrite_local=True
+            overwrite_local=True,
         )
-
-    def write_predictions(self, df: DataFrame):
-        self.log.info('Writing predictions to DataMart')

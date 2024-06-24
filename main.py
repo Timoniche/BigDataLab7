@@ -2,8 +2,10 @@ from datamart import DataMart
 from hdfs_client import HdfsClient
 from kmeans_clustering import KMeansClustering
 from logger import Logger
+from scaler import Scaler
 from spark_session_provider import SparkSessionProvider
 from utils import root_dir
+from vectorizer import Vectorizer
 
 
 def main():
@@ -22,11 +24,18 @@ def main():
     clusterizer = KMeansClustering()
     datamart = DataMart(spark, hdfs_client)
 
-    scaled_dataset = datamart.read_dataset()
+    preprocessed_dataset = datamart.read_dataset()
+
+    vectorizer = Vectorizer()
+    vectorized_dataset = vectorizer.vectorize(preprocessed_dataset)
+
+    scaler = Scaler()
+    scaled_dataset = scaler.scale(vectorized_dataset)
+
     scaled_dataset.collect()
 
     predictions = clusterizer.clusterize(scaled_dataset)
-    datamart.write_predictions(predictions.select("prediction"))
+    predictions.collect()
 
     spark.stop()
 

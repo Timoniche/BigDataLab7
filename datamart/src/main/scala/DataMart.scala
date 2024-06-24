@@ -88,19 +88,14 @@ object DataMart {
 
     val transforms: Seq[DataFrame => DataFrame] = Seq(
       Preprocessor.fillNa,
-      Preprocessor.assembleVector,
-      Preprocessor.scaleAssembledDataset
+      Preprocessor.leaveInputCols,
     )
 
     val transformedDf = transforms.foldLeft(df) { (df, f) => f(df) }
 
     logger.info("Transformations applied to the FoodFacts dataset")
 
-    val castedDf = transformedDf
-      .withColumn("features", col("features").cast("string"))
-      .withColumn("scaled_features", col("scaled_features").cast("string"))
-
-    saveDfToCsv(castedDf, localPreprocessedPath)
+    saveDfToCsv(transformedDf, localPreprocessedPath)
 
     try {
       val uploaded = hdfsClient.upload(localPreprocessedPath, hdfsPreprocessedPath)

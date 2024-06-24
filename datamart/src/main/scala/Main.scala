@@ -3,6 +3,8 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
+import scala.concurrent.duration.DurationInt
+
 object Main {
   private val PORT = 9001
 
@@ -18,9 +20,11 @@ object Main {
     implicit val system: ActorSystem = ActorSystem("datamart-server")
 
     val route: Route = path("preprocess") {
-      get {
-        datamart.preprocessDataset()
-        complete("Dataset is preprocessed and loaded to HDFS")
+      withRequestTimeout(5.minute) {
+        get {
+          datamart.preprocessDataset()
+          complete("Dataset is preprocessed and loaded to HDFS")
+        }
       }
     }
 

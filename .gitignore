@@ -14,3 +14,6 @@
 /datamart/project/project/target/config-classes/*
 src/main/.DS_Store
 .DS_Store
+/datamart/market_dataset.csv
+/datamart/preprocessed.csv
+/preprocessed.csv
