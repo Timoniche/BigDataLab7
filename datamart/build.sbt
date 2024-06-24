@@ -5,8 +5,6 @@ ThisBuild / scalaVersion := "2.12.19"
 lazy val root = (project in file("."))
   .settings(
     name := "datamart",
-    javaOptions += "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
-    Test / javaOptions += "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
   )
 
 val sparkVersion = "3.5.1"

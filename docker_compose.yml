@@ -7,13 +7,23 @@ services:
     depends_on:
       - namenode
       - datanode
+      - datamart
     build:
       dockerfile: Dockerfile
     command: bash -c "python main.py"
     restart: on-failure
 
-  #  TODO:
-  #  datamart:
+  datamart:
+    image: ddulaev/datamart:latest
+    container_name: datamart
+    depends_on:
+      - namenode
+      - datanode
+    ports:
+      - "9001:9001"
+    build:
+      dockerfile: datamart/Dockerfile
+    restart: on-failure
 
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
