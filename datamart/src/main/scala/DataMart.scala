@@ -19,6 +19,12 @@ final case class UploadingPredictionsException(
                                               )
   extends Exception(message, cause)
 
+final case class UploadingPreprocessedException(
+                                                 private val message: String = "",
+                                                 private val cause: Throwable = None.orNull
+                                               )
+  extends Exception(message, cause)
+
 //noinspection ScalaUnusedSymbol
 object DataMart {
   private val APP_NAME = "KMeans"
@@ -59,8 +65,10 @@ object DataMart {
   private val oldPredictionsLocalPath = curDir + "/old_market_predictions.csv"
   private val hdfsPredictionsUploadPath = "predictions.csv"
   private val predictionsLocalDiffPath = curDir + "/diff_market_predictions.csv"
+  private val localPreprocessedPath = curDir + "/preprocessed.csv"
+  private val hdfsPreprocessedPath = "preprocessed.csv"
 
-  def readPreprocessedOpenFoodFactsDataset(): DataFrame = {
+  def preprocessDataset(): Unit = {
     logger.info("Loading dataset.csv from hdfs, hdfsFilePath {}, localPath {}", hdfsFilePath, localDownloadPath)
 
     try {
@@ -84,11 +92,26 @@ object DataMart {
       Preprocessor.scaleAssembledDataset
     )
 
-    val transformed = transforms.foldLeft(df) { (df, f) => f(df) }
+    val transformedDf = transforms.foldLeft(df) { (df, f) => f(df) }
 
     logger.info("Transformations applied to the FoodFacts dataset")
 
-    transformed
+    val castedDf = transformedDf
+      .withColumn("features", col("features").cast("string"))
+      .withColumn("scaled_features", col("scaled_features").cast("string"))
+
+    saveDfToCsv(castedDf, localPreprocessedPath)
+
+    try {
+      val uploaded = hdfsClient.upload(localPreprocessedPath, hdfsPreprocessedPath)
+      if (!uploaded) {
+        throw UploadingPreprocessedException("Failed to upload preprocessed dataset to HDFS")
+      }
+    } catch {
+      case ex@(_: IOException | _: URISyntaxException) =>
+        logger.info("upload ex: {}", ex.getMessage)
+        throw UploadingPreprocessedException(ex.getMessage)
+    }
   }
 
   def writePredictions(df: DataFrame): Unit = {

@@ -6,6 +6,8 @@ import akka.http.scaladsl.server.Route
 object Main {
   private val PORT = 9001
 
+  private val datamart = DataMart
+
   def main(args: Array[String]): Unit = {
     startHttpServer()
   }
@@ -15,6 +17,7 @@ object Main {
 
     val route: Route = path("preprocess") {
       get {
+        datamart.preprocessDataset()
         complete("Dataset is preprocessed and loaded to HDFS")
       }
     }

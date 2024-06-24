@@ -4,7 +4,9 @@ ThisBuild / scalaVersion := "2.12.19"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "datamart"
+    name := "datamart",
+    javaOptions += "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+    Test / javaOptions += "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
   )
 
 val sparkVersion = "3.5.1"
@@ -22,6 +24,3 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-core" % "10.5.3",
   "com.typesafe.akka" %% "akka-http" % "10.5.3",
 )
-
-fork := true
-javaOptions += "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
