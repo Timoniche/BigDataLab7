@@ -17,3 +17,4 @@ src/main/.DS_Store
 /datamart/market_dataset.csv
 /datamart/preprocessed.csv
 /preprocessed.csv
+/datamart/datamart.log
