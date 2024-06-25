@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.duration.DurationInt
 
@@ -9,10 +10,12 @@ object Main {
   private val PORT = 9001
 
   private val datamart = DataMart
+  private val logger = Logger("MainServerApp")
 
   //  add to VM options
   //  --add-exports java.base/sun.nio.ch=ALL-UNNAMED
   def main(args: Array[String]): Unit = {
+    logger.info("Starting Datamarket http Server")
     startHttpServer()
   }
 
@@ -28,6 +31,7 @@ object Main {
       }
     }
 
-    Http().newServerAt("localhost", PORT).bind(route)
+    Http().newServerAt("0.0.0.0", PORT).bind(route)
+    logger.info("Server is online on port: {}", PORT)
   }
 }
